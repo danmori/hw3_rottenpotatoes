@@ -40,17 +40,13 @@ When /^I (un)?check all the ratings$/ do | uncheck |
 end
 
 Then /I should (not )?see all movies rated: (.*)/ do |neg, rating_list|
-  ratings = rating_list.split(",").each do |rating|
-      rating = rating.gsub(/\s/,'')
-    end
+  ratings = rating_list.split(",").map(&:strip)
+
   if neg
-    #ratings.each do |rating|
-       #movie = Movie.where("rating != ?", rating)
-       #movies << movie.first
-    #end
     ratings = Movie.all_ratings - ratings
     movies = Movie.where(:rating => ratings)
     movies.each do |movie|
+      #assert true unless page.body != /#{movie.title}/m
       assert true unless page.body =~ /#{movie.title}/m
     end
   else
