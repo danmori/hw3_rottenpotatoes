@@ -18,8 +18,8 @@ end
 #  "When I check the following ratings: G"
 
 Given /I (un)?check the following ratings: (.*)/ do |uncheck, rating_list|
-  rating_list.split(',').each do |rating|
-    rating = "ratings_" + rating.gsub(/\s/,'')
+  rating_list.split(',').map(&:strip).each do |rating|
+    rating = "ratings_" + rating
     if uncheck
       uncheck(rating)
     else
@@ -30,7 +30,7 @@ end
 
 When /^I (un)?check all the ratings$/ do | uncheck |
   Movie.all_ratings.each do | rating  |
-    rating = "ratings_" + rating.gsub(/\s/,'')
+    rating = "ratings_" + rating
     if uncheck
       uncheck(rating)
     else
@@ -43,16 +43,22 @@ Then /I should (not )?see all movies rated: (.*)/ do |neg, rating_list|
   ratings = rating_list.split(",").map(&:strip)
 
   if neg
-    ratings = Movie.all_ratings - ratings
     movies = Movie.where(:rating => ratings)
     movies.each do |movie|
-      #assert true unless page.body != /#{movie.title}/m
-      assert true unless page.body =~ /#{movie.title}/m
+      if page.respond_to? :should
+        page.should have_no_content(/#{movie.title}/)
+      else
+        assert page.has_no_content?(/#{movie.title}/)
+      end
     end
   else
     movies = Movie.where(:rating => ratings) 
     movies.each do |movie|
-      assert page.body =~ /#{movie.title}/m, "#{movie.title} did not appear"
+      if page.respond_to? :should
+        page.should have_content(/#{movie.title}/)
+      else
+        assert page.has_content?(/#{movie.title}/)
+      end
     end
   end
 
